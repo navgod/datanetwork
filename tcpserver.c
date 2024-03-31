@@ -75,7 +75,7 @@ int main() {
                 if (str_len <= 0) break; // 연결 종료 또는 오류
                 buf[str_len] = '\0';
                 puts(buf);
-
+                puts("--");
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
                     break; // 연결 종료
@@ -83,6 +83,7 @@ int main() {
 
                 enqueue(buf); // 메시지를 큐에 추가
                 puts(messageQueue[queueEnd - 1]);
+                puts("----");
                 // 마지막 메시지 확인
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV\n") == 0) {
                     
