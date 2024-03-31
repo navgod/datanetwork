@@ -64,8 +64,10 @@ int main() {
         } else if (!strcmp(message, "Q\n")) {
             write(sock, "SEND\n", strlen("SEND\n"));
             while (dequeue(message)) {
+                strcat(message, "\n"); // 메시지 끝에 구분자 추가
                 write(sock, message, strlen(message));
             }
+
             write(sock, "RECV\n", strlen("RECV\n"));
             // 서버로부터 응답 받기 시작
             while(1) {

@@ -61,7 +61,7 @@ int main() {
         clnt_addr_size = sizeof(clnt_addr);
         clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
         if (clnt_sock == -1)
-            continue; 
+            continue;
 
         int pid = fork();
         if (pid == -1) {
@@ -72,15 +72,15 @@ int main() {
 
             char buf[MAXBUF];
             int state = 0; // 0: 일반, 1: 메시지 수신 모드
-            int str_len = 0; // 여기로 옮김
 
             while (1) {
                 memset(buf, 0, MAXBUF); // 버퍼 초기화
-                str_len = read(clnt_sock, buf, MAXBUF-1); // 여기서 read 호출
+                int str_len = read(clnt_sock, buf, MAXBUF-1); // 메시지 읽기
                 if (str_len == -1) break; // 읽기 오류 발생
-                buf[str_len] = 0; // NULL 문자 추가, 문자열 종료
+                buf[str_len] = '\0'; // NULL 문자로 문자열 종료
 
-                 printf("Received from client: %s\n", buf);
+                // 클라이언트로부터 받은 메시지를 출력
+                printf("Received from client: %s\n", buf);
 
                 if (!state && strcmp(buf, "SEND\n") == 0) {
                     state = 1; // 메시지 수신 모드로 전환
@@ -88,7 +88,6 @@ int main() {
                     while (dequeue(buf)) { // 큐에 있는 메시지를 모두 전송
                         write(clnt_sock, buf, strlen(buf));
                     }
-                    write(clnt_sock, "RECV\n", strlen("RECV\n"));
                     state = 0; // 일반 모드로 전환
                 } else if (strcmp(buf, "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n")); // 클라이언트에게 종료 응답
