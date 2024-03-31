@@ -72,12 +72,13 @@ int main() {
 
             char buf[MAXBUF];
             int state = 0; // 0: 일반, 1: 메시지 수신 모드
+            int str_len = 0; // 여기로 옮김
 
             while (1) {
                 memset(buf, 0, MAXBUF); // 버퍼 초기화
+                str_len = read(clnt_sock, buf, MAXBUF-1); // 여기서 read 호출
                 if (str_len == -1) break; // 읽기 오류 발생
-                buf[str_len] = 0; // NULL 문자 추가
-                int str_len = read(clnt_sock, buf, MAXBUF-1);
+                buf[str_len] = 0; // NULL 문자 추가, 문자열 종료
 
                 if (!state && strcmp(buf, "SEND\n") == 0) {
                     state = 1; // 메시지 수신 모드로 전환
