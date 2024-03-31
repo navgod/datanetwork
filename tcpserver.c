@@ -79,23 +79,20 @@ int main() {
 
                 while ((token = strtok_r(rest, "\n", &rest))) {
                     enqueue(token);
-                    printf("token = %s\n", token);
+                    printf("client = %s\n", token);
                 }
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
                     break; // 연결 종료
                 }
-
-                puts(messageQueue[queueEnd - 1]);
-                puts("----");
                 // 마지막 메시지 확인
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV") != NULL) {
                     
                     while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
                         write(clnt_sock, buf, strlen(buf));
                         write(clnt_sock, "\n", 1); // 메시지 사이에 개행 추가
-                        printf("buf = %s\n", buf);
                     }
+                    puts("SENDED ALL");
                     queueStart = 0; queueEnd = 0; // 큐 초기화
                 }
             }
