@@ -18,7 +18,7 @@ char messageQueue[QUEUE_SIZE][BUF_SIZE];
 int queueStart = 0, queueEnd = 0;
 
 void enqueue(char *message) {
-    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) {
+    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) { 
         strcpy(messageQueue[queueEnd], message);
         queueEnd = (queueEnd + 1) % QUEUE_SIZE;
     } else {
@@ -27,12 +27,12 @@ void enqueue(char *message) {
 }
 
 int dequeue(char *message) {
-    if (queueStart != queueEnd) {
+    if (queueStart != queueEnd) { 
         strcpy(message, messageQueue[queueStart]);
         queueStart = (queueStart + 1) % QUEUE_SIZE;
-        return 1; // 성공적으로 메시지를 Dequeue
+        return 1; 
     }
-    return 0; // 큐가 비어있음
+    return 0; // 실패, 큐가 비어있음
 }
 
 int main() {
@@ -59,9 +59,9 @@ int main() {
 
         if (!strcmp(message, "bye\n")) {
             write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
-            int str_len = read(sock, message, BUF_SIZE - 1); 
-            message[str_len] = 0; 
-            printf("%s\n", message);
+            if (read(sock, message, BUF_SIZE) != -1) {
+                printf("Server: %s\n", message);
+            }
             break; // 서버 응답 후 종료
         } else if (!strcmp(message, "Q\n")) {
             write(sock, "SEND\n", strlen("SEND\n"));

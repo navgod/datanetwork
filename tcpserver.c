@@ -4,7 +4,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/wait.h>
 
 #define MAXBUF 1024
 #define QUEUE_SIZE 10
@@ -15,23 +14,25 @@ void error_handling(char *message) {
     exit(EXIT_FAILURE);
 }
 
-char messageQueue[QUEUE_SIZE][MAXBUF]; // 10개 까지 수용
-int queueStart = 0, queueEnd = 0;
+char messageQueue[QUEUE_SIZE][MAXBUF]; // 메시지 큐
+int queueStart = 0, queueEnd = 0; // 큐 시작점과 끝점
 
 void enqueue(char *message) {
-    if ((queueEnd + 1) % 10 != queueStart) { 
+    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) { // 큐가 가득 찼는지 확인
         strcpy(messageQueue[queueEnd], message);
-        queueEnd = (queueEnd + 1) % 10;
+        queueEnd = (queueEnd + 1) % QUEUE_SIZE;
+    } else {
+        printf("Queue is full. Cannot enqueue message.\n");
     }
 }
 
 int dequeue(char *message) {
-    if (queueStart != queueEnd) { 
+    if (queueStart != queueEnd) { // 큐가 비어있지 않은지 확인
         strcpy(message, messageQueue[queueStart]);
-        queueStart = (queueStart + 1) % 10;
-        return 1; 
+        queueStart = (queueStart + 1) % QUEUE_SIZE;
+        return 1; // 성공적으로 메시지를 Dequeue
     }
-    return 0; // 실패, 큐가 비어있음
+    return 0; // 큐가 비어있음
 }
 
 int main() {
@@ -54,6 +55,8 @@ int main() {
     if (listen(serv_sock, 5) == -1)
         error_handling("listen error");
 
+    printf("Server is running on port %d\n", PORT);
+
     while (1) {
         clnt_addr_size = sizeof(clnt_addr);
         clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
@@ -63,38 +66,36 @@ int main() {
         int pid = fork();
         if (pid == -1) {
             close(clnt_sock);
-            continue; 
-        } else if (pid == 0) {
+            continue;
+        } else if (pid == 0) { // 자식 프로세스
             close(serv_sock);
-            write(clnt_sock, "서버 준비됨\n", strlen("서버 준비됨\n")); // 클라이언트에게 서버 준비 상태 알림
 
             char buf[MAXBUF];
-            int str_len = 0; 
-            int state = 0; 
+            int state = 0; // 0: 일반, 1: 메시지 수신 모드
 
-            while ((str_len = read(clnt_sock, buf, MAXBUF-1)) != -1) {
-                buf[str_len] = 0;
-                if (state == 0 && strcmp(buf, "SEND\n") == 0) {
-                    state = 1; // "SEND\n" 메시지 수신, 수신 모드로 전환
-                    continue;
-                } else if (state == 1 && strcmp(buf, "RECV\n") == 0) {
-                    state = 0; // "RECV\n" 메시지 수신, 큐에 저장된 메시지 전송
-                    while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
+            while (1) {
+                memset(buf, 0, MAXBUF); // 버퍼 초기화
+                int str_len = read(clnt_sock, buf, MAXBUF-1);
+                if (str_len == -1) break; // 읽기 오류 발생
+                buf[str_len] = 0; // NULL 문자 추가
+
+                if (!state && strcmp(buf, "SEND\n") == 0) {
+                    state = 1; // 메시지 수신 모드로 전환
+                } else if (state && strcmp(buf, "RECV\n") == 0) {
+                    while (dequeue(buf)) { // 큐에 있는 메시지를 모두 전송
                         write(clnt_sock, buf, strlen(buf));
                     }
-                    continue;
+                    state = 0; // 일반 모드로 전환
                 } else if (strcmp(buf, "ECHO_CLOSE\n") == 0) {
-                    write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n")); // 응답 후 종료
+                    write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n")); // 클라이언트에게 종료 응답
                     break;
-                }
-
-                if (state == 1) {
-                    enqueue(buf);
+                } else if (state) {
+                    enqueue(buf); // 메시지 수신 모드에서는 메시지를 큐에 추가
                 }
             }
 
             close(clnt_sock);
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         } else {
             close(clnt_sock);
         }
