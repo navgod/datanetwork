@@ -82,7 +82,7 @@ int main() {
                 }
 
                 enqueue(buf); // 메시지를 큐에 추가
-                puts(messageQueue[queueEnd - 1])
+                puts(messageQueue[queueEnd - 1]);
                 // 마지막 메시지 확인
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "RECV\n") == 0) {
                     for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
