@@ -14,11 +14,11 @@ void error_handling(char *message) {
     exit(EXIT_FAILURE);
 }
 
-char messageQueue[QUEUE_SIZE][MAXBUF]; // 메시지 큐
-int queueStart = 0, queueEnd = 0; // 큐 시작점과 끝점
+char messageQueue[QUEUE_SIZE][MAXBUF];
+int queueStart = 0, queueEnd = 0;
 
 void enqueue(char *message) {
-    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) { // 큐가 가득 찼는지 확인
+    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) {
         strcpy(messageQueue[queueEnd], message);
         queueEnd = (queueEnd + 1) % QUEUE_SIZE;
     } else {
@@ -27,7 +27,7 @@ void enqueue(char *message) {
 }
 
 int dequeue(char *message) {
-    if (queueStart != queueEnd) { // 큐가 비어있지 않은지 확인
+    if (queueStart != queueEnd) {
         strcpy(message, messageQueue[queueStart]);
         queueStart = (queueStart + 1) % QUEUE_SIZE;
         return 1; // 성공적으로 메시지를 Dequeue
@@ -69,38 +69,30 @@ int main() {
             close(serv_sock);
 
             char buf[MAXBUF], messageBuffer[MAXBUF] = "";
-            int state = 0; // 0: 일반, 1: 메시지 수신 모드
-
             while (1) {
                 memset(buf, 0, MAXBUF); // 버퍼 초기화
                 ssize_t str_len = read(clnt_sock, buf, MAXBUF-1); // 메시지 읽기
-                if (str_len <= 0) break; // 읽기 오류 발생 또는 연결 종료
-                buf[str_len] = '\0'; // NULL 문자로 문자열 종료
+                if (str_len <= 0) break; // 연결 종료 또는 오류
+                buf[str_len] = '\0';
                 
-                strcat(messageBuffer, buf); // 메시지 버퍼에 추가
-                char *ptr, *saveptr;
-                ptr = strtok_r(messageBuffer, "\n", &saveptr);
-                while (ptr) {
-                    puts(ptr);
-                    if (!state && strcmp(ptr, "SEND") == 0) {
-                        state = 1;
-                    } else if (state && strcmp(ptr, "RECV") == 0) {
-                        while (dequeue(buf)) { 
-                            strcat(buf, "\n");
-                            write(clnt_sock, buf, strlen(buf));
-                        }
-                        write(clnt_sock, "RECV", strlen("RECV"));
-                        state = 0;
-                    } else if (strcmp(ptr, "ECHO_CLOSE") == 0) {
-                        write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
-                        close(clnt_sock);
-                        exit(EXIT_SUCCESS);
-                    } else if (state) {
-                        enqueue(ptr); // 메시지를 큐에 추가
-                    }
-                    ptr = strtok_r(NULL, "\n", &saveptr);
+                if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
+                    write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
+                    break; 
                 }
-                memset(messageBuffer, 0, MAXBUF); // 버퍼 초기화
+
+                enqueue(buf); // 메시지를 큐에 추가
+
+                // 마지막 메시지 확인
+                if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "RECV\n") == 0) {
+                    for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
+                        write(clnt_sock, messageQueue[i], strlen(messageQueue[i]));
+                        if (i < QUEUE_SIZE - 1) { // 마지막 메시지가 아니면
+                            write(clnt_sock, "\n", 1);
+                        }
+                    }
+                    write(clnt_sock, "RECV\n", strlen("RECV\n")); // 모든 메시지 전송 후 RECV 응답
+                    queueStart = 0; queueEnd = 0; // 큐 초기화
+                }
             }
 
             close(clnt_sock);

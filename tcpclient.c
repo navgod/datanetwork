@@ -53,50 +53,44 @@ int main() {
         puts("Connected to the server...");
 
     while(1) {
-        char message[BUF_SIZE];
-        memset(message, 0, BUF_SIZE);
+        char message[BUF_SIZE] = {0};
         fputs("Input message (Q to send, bye to quit): ", stdout);
         fgets(message, BUF_SIZE, stdin);
 
-        if (!strcmp(message, "bye\n")) {
+        if (strcmp(message, "bye\n") == 0) {
             write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
-            memset(message, 0, BUF_SIZE);
-            int read_len = read(sock, message, BUF_SIZE-1);
-            if (read_len == -1) {
-                    error_handling("read() error!");
-            } else if (read_len == 0) {
-                    break;
-            }
-            message[read_len] = '\0';
-            strcat(responseBuffer, message);
-            if (strstr(responseBuffer, "ECHO_CLOSE\n") != NULL) {
-                    break;
-                }
-            break;
-        } else if (!strcmp(message, "Q\n")) {
-            write(sock, "SEND\n", strlen("SEND\n"));
-            while (dequeue(message)) {
-                strcat(message, "\n");
-                write(sock, message, strlen(message));
-            }
-            write(sock, "RECV\n", strlen("RECV\n"));
-
-            // 서버로부터 응답 받기 시작
-            char responseBuffer[BUF_SIZE] = "";
+            // Wait for server's confirmation before closing.
             while(1) {
-                memset(message, 0, BUF_SIZE);
-                int read_len = read(sock, message, BUF_SIZE-1);
-                if (read_len == -1) {
-                    error_handling("read() error!");
-                } else if (read_len == 0) {
+                int read_len = read(sock, message, BUF_SIZE - 1);
+                if (read_len <= 0) break;
+                message[read_len] = '\0';
+                if (strcmp(message, "ECHO_CLOSE\n") == 0) {
+                    printf("Server closed connection.\n");
                     break;
                 }
-                message[read_len] = '\0';
-                strcat(responseBuffer, message);
+            }
+            break;
+        } else if (strcmp(message, "Q\n") == 0) {
+            for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
+                write(sock, messageQueue[i], strlen(messageQueue[i]));
+                write(sock, "\n", 1);
+            }
+            write(sock, "RECV\n", 5);
+            queueStart = 0; queueEnd = 0; // Reset the queue
+
+            // Read server's echo messages until "RECV\n" is received
+            char responseBuffer[BUF_SIZE * QUEUE_SIZE] = {0}; // Larger buffer to hold all echoed messages
+            while(1) {
+                char tempBuffer[BUF_SIZE] = {0};
+                int read_len = read(sock, tempBuffer, BUF_SIZE - 1);
+                if (read_len <= 0) break;
+                tempBuffer[read_len] = '\0';
+                strcat(responseBuffer, tempBuffer); // Append received message to the response buffer
 
                 if (strstr(responseBuffer, "RECV\n") != NULL) {
-                    printf("%s", responseBuffer); // 서버로부터 받은 모든 메시지 출력
-                    break;
+                    printf("%s", responseBuffer); // Print all received echo messages
+                    memset(responseBuffer, 0, sizeof(responseBuffer)); // Clear buffer after printing
+                    break; // Exit after receiving "RECV\n"
                 }
             }
         } else {
