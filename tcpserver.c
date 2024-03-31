@@ -76,12 +76,18 @@ int main() {
                 buf[str_len] = '\0';
                 puts(buf);
                 puts("--");
+                char *token;
+                char *rest = buf;
+
+                while ((token = strtok_r(rest, "\n", &rest))) {
+                    enqueue(token);
+                    printf("%s\n", token);
+                }
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
                     break; // 연결 종료
                 }
-
-                enqueue(buf); // 메시지를 큐에 추가
+                
                 puts(messageQueue[queueEnd - 1]);
                 puts("----");
                 // 마지막 메시지 확인

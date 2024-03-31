@@ -64,7 +64,7 @@ int main() {
                 int read_len = read(sock, message, BUF_SIZE - 1);
                 if (read_len <= 0) break;
                 message[read_len] = '\0';
-                if (strcmp(message, "ECHO_CLOSE\n") == 0) {
+                if (strstr(message, "ECHO_CLOSE\n") == 0) {
                     printf("Server closed connection.\n");
                     break;
                 }
@@ -87,7 +87,7 @@ int main() {
                 tempBuffer[read_len] = '\0';
                 strcat(responseBuffer, tempBuffer); // Append received message to the response buffer
                 puts(responseBuffer);
-                
+
                 if (strstr(responseBuffer, "RECV\n") != NULL) {
                     printf("%s", responseBuffer); // Print all received echo messages
                     memset(responseBuffer, 0, sizeof(responseBuffer)); // Clear buffer after printing
