@@ -58,6 +58,10 @@ int main() {
         fgets(message, BUF_SIZE, stdin);
 
         if (strcmp(message, "bye\n") == 0) {
+            while (dequeue(message)) { 
+                write(sock, message, strlen(message));
+                write(sock, "\n", 1); 
+            }
             write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
             // Wait for server's confirmation before closing.
             while(1) {

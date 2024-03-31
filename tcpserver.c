@@ -82,6 +82,9 @@ int main() {
                     printf("client = %s\n", token);
                 }
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "ECHO_CLOSE") != NULL) {
+                    while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
+                        printf("client = %s\n", buf);
+                    }
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
                     puts("Connection closed");
                     break; // 연결 종료
