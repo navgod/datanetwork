@@ -14,11 +14,11 @@ void error_handling(char *message) {
     exit(EXIT_FAILURE);
 }
 
-char messageQueue[QUEUE_SIZE][BUF_SIZE]; 
+char messageQueue[QUEUE_SIZE][BUF_SIZE];
 int queueStart = 0, queueEnd = 0;
 
 void enqueue(char *message) {
-    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) { 
+    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) {
         strcpy(messageQueue[queueEnd], message);
         queueEnd = (queueEnd + 1) % QUEUE_SIZE;
     } else {
@@ -27,18 +27,18 @@ void enqueue(char *message) {
 }
 
 int dequeue(char *message) {
-    if (queueStart != queueEnd) { 
+    if (queueStart != queueEnd) {
         strcpy(message, messageQueue[queueStart]);
         queueStart = (queueStart + 1) % QUEUE_SIZE;
-        return 1; 
+        return 1;
     }
-    return 0; // 실패, 큐가 비어있음
+    return 0;
 }
 
 int main() {
     int sock;
     struct sockaddr_in serv_addr;
-    
+
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1) error_handling("socket() error");
 
@@ -52,33 +52,44 @@ int main() {
     else
         puts("Connected to the server...");
 
-    char responseBuffer[BUF_SIZE] = {0}; // 서버로부터의 응답을 저장할 버퍼
     while(1) {
-        char response[BUF_SIZE];
-        memset(response, 0, BUF_SIZE); // 응답 버퍼 초기화
-        int read_len = read(sock, response, BUF_SIZE-1);
-        if (read_len == -1) {
-            error_handling("read() error!");
-        } else if (read_len == 0) {
-            break; // 서버가 연결을 닫음
-        }
-        response[read_len] = '\0'; // NULL로 문자열 종료
+        char message[BUF_SIZE];
+        memset(message, 0, BUF_SIZE);
+        fputs("Input message (Q to send, bye to quit): ", stdout);
+        fgets(message, BUF_SIZE, stdin);
 
-        strcat(responseBuffer, response); // 버퍼에 응답 추가
-
-        // "\n" 기준으로 응답 분리
-        char* token = strtok(responseBuffer, "\n");
-        while(token != NULL) {
-            printf("Server: %s\n", token);
-            if (strcmp(token, "RECV") == 0) {
-                // "RECV\n"을 받았으므로 처리 중단
-                memset(responseBuffer, 0, BUF_SIZE); // 버퍼 초기화
-                break;
+        if (!strcmp(message, "bye\n")) {
+            write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
+            break;
+        } else if (!strcmp(message, "Q\n")) {
+            write(sock, "SEND\n", strlen("SEND\n"));
+            while (dequeue(message)) {
+                strcat(message, "\n");
+                write(sock, message, strlen(message));
             }
-            token = strtok(NULL, "\n");
-        }
-        if (strcmp(token, "RECV") == 0) {
-            break; // "RECV\n" 수신 시 루프 종료
+            write(sock, "RECV\n", strlen("RECV\n"));
+
+            // 서버로부터 응답 받기 시작
+            char responseBuffer[BUF_SIZE] = "";
+            while(1) {
+                memset(message, 0, BUF_SIZE);
+                int read_len = read(sock, message, BUF_SIZE-1);
+                if (read_len == -1) {
+                    error_handling("read() error!");
+                } else if (read_len == 0) {
+                    break;
+                }
+                message[read_len] = '\0';
+                strcat(responseBuffer, message);
+
+                if (strstr(responseBuffer, "RECV\n") != NULL) {
+                    printf("%s", responseBuffer); // 서버로부터 받은 모든 메시지 출력
+                    break;
+                }
+            }
+        } else {
+            message[strlen(message) - 1] = '\0'; // Remove newline
+            enqueue(message);
         }
     }
 

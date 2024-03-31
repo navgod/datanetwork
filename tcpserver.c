@@ -81,7 +81,7 @@ int main() {
                 char *ptr, *saveptr;
                 ptr = strtok_r(messageBuffer, "\n", &saveptr);
                 while (ptr) {
-                    printf(ptr)
+                    puts(ptr);
                     if (!state && strcmp(ptr, "SEND") == 0) {
                         state = 1;
                     } else if (state && strcmp(ptr, "RECV") == 0) {
