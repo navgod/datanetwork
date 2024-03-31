@@ -74,20 +74,18 @@ int main() {
                 ssize_t str_len = read(clnt_sock, buf, MAXBUF-1); // 메시지 읽기
                 if (str_len <= 0) break; // 연결 종료 또는 오류
                 buf[str_len] = '\0';
-                puts(buf);
-                puts("--");
                 char *token;
                 char *rest = buf;
 
                 while ((token = strtok_r(rest, "\n", &rest))) {
                     enqueue(token);
-                    printf("%s\n", token);
+                    printf("token = %s\n", token);
                 }
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
                     break; // 연결 종료
                 }
-                
+
                 puts(messageQueue[queueEnd - 1]);
                 puts("----");
                 // 마지막 메시지 확인
@@ -96,6 +94,7 @@ int main() {
                     while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
                         write(clnt_sock, buf, strlen(buf));
                         write(clnt_sock, "\n", 1); // 메시지 사이에 개행 추가
+                        printf("buf = %s\n", buf);
                     }
                     write(clnt_sock, "RECV\n", strlen("RECV\n")); // 모든 메시지 전송 후 RECV 응답
                     queueStart = 0; queueEnd = 0; // 큐 초기화
