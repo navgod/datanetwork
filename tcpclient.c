@@ -59,8 +59,7 @@ int main() {
 
         if (strcmp(message, "bye\n") == 0) {
             while (dequeue(message)) { 
-                write(sock, message, strlen(message));
-                write(sock, "\n", 1); 
+                printf("Server Echo = %s\n", message);
             }
             write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
             // Wait for server's confirmation before closing.
