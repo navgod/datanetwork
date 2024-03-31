@@ -72,17 +72,17 @@ int main() {
             break;
         } else if (strcmp(message, "Q\n") == 0) {
             while (dequeue(message)) { // 큐가 비어있을 때까지 메시지 전송
-                write(clnt_sock, message, strlen(message));
-                write(clnt_sock, "\n", 1); // 메시지 사이에 개행 추가
-                printf("buf = %s\n", buf);
+                write(sock, message, strlen(message));
+                write(sock, "\n", 1); // 메시지 사이에 개행 추가
+                printf("message = %s\n", message);
             }
             write(sock, "RECV\n", 5);
             queueStart = 0; queueEnd = 0; // Reset the queue
 
-            char buf[MAXBUF] = "";
+            char buf[BUF_SIZE] = "";
             while(1) {
-                memset(buf, 0, MAXBUF); // 버퍼 초기화
-                ssize_t str_len = read(sock, buf, MAXBUF-1); // 메시지 읽기
+                memset(buf, 0, BUF_SIZE); // 버퍼 초기화
+                ssize_t str_len = read(sock, buf, BUF_SIZE-1); // 메시지 읽기
                 if (str_len <= 0) break; // 연결 종료 또는 오류
                 buf[str_len] = '\0';
                 char *token;
