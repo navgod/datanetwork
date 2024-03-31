@@ -94,7 +94,7 @@ int main() {
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV") != NULL) {
                     
                     while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
-                        printf("buf = %s\n", buf);
+                        printf("Server Echo = %s\n", buf);
                     }
                     queueStart = 0; queueEnd = 0; // 큐 초기화
                     break;

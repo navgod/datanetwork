@@ -68,7 +68,7 @@ int main() {
         } else if (pid == 0) { // 자식 프로세스
             close(serv_sock);
 
-            char buf[MAXBUF], messageBuffer[MAXBUF] = "";
+            char buf[MAXBUF] = "";
             while (1) {
                 memset(buf, 0, MAXBUF); // 버퍼 초기화
                 ssize_t str_len = read(clnt_sock, buf, MAXBUF-1); // 메시지 읽기
@@ -83,6 +83,7 @@ int main() {
                 }
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
+                    puts("Connection closed");
                     break; // 연결 종료
                 }
                 // 마지막 메시지 확인
