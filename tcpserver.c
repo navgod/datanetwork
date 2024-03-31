@@ -85,6 +85,7 @@ int main() {
                 puts(messageQueue[queueEnd - 1]);
                 // 마지막 메시지 확인
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV\n") == 0) {
+                    puts("in")
                     for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
                         write(clnt_sock, messageQueue[i], strlen(messageQueue[i]));
                         if (i < QUEUE_SIZE - 1) { // 마지막 메시지가 아니면
