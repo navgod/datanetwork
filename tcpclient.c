@@ -54,6 +54,7 @@ int main() {
 
     while(1) {
         char message[BUF_SIZE];
+        memset(message, 0, BUF_SIZE);
         fputs("Input message (Q to send, bye to quit): ", stdout);
         fgets(message, BUF_SIZE, stdin);
 
