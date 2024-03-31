@@ -84,7 +84,7 @@ int main() {
                 enqueue(buf); // 메시지를 큐에 추가
                 puts(messageQueue[queueEnd - 1]);
                 // 마지막 메시지 확인
-                if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "RECV\n") == 0) {
+                if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV\n") == 0) {
                     for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
                         write(clnt_sock, messageQueue[i], strlen(messageQueue[i]));
                         if (i < QUEUE_SIZE - 1) { // 마지막 메시지가 아니면
