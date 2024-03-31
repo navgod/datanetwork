@@ -52,40 +52,33 @@ int main() {
     else
         puts("Connected to the server...");
 
+    char responseBuffer[BUF_SIZE] = {0}; // 서버로부터의 응답을 저장할 버퍼
     while(1) {
-        char message[BUF_SIZE];
-        memset(message, 0, BUF_SIZE); // 메시지 버퍼 초기화
-        fputs("Input message (Q to send, bye to quit): ", stdout);
-        fgets(message, BUF_SIZE, stdin);
+        char response[BUF_SIZE];
+        memset(response, 0, BUF_SIZE); // 응답 버퍼 초기화
+        int read_len = read(sock, response, BUF_SIZE-1);
+        if (read_len == -1) {
+            error_handling("read() error!");
+        } else if (read_len == 0) {
+            break; // 서버가 연결을 닫음
+        }
+        response[read_len] = '\0'; // NULL로 문자열 종료
 
-        if (!strcmp(message, "bye\n")) {
-            write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
-            break; // 서버 응답 후 종료
-        } else if (!strcmp(message, "Q\n")) {
-            write(sock, "SEND\n", strlen("SEND\n"));
-            while (dequeue(message)) {
-                strcat(message, "\n"); // 메시지 끝에 구분자 추가
-                write(sock, message, strlen(message));
-            }
+        strcat(responseBuffer, response); // 버퍼에 응답 추가
 
-            write(sock, "RECV\n", strlen("RECV\n"));
-            // 서버로부터 응답 받기 시작
-            while(1) {
-                char response[BUF_SIZE];
-                int read_len = read(sock, response, BUF_SIZE-1);
-                if (read_len == -1) {
-                    error_handling("read() error!");
-                } else if (read_len == 0) {
-                    break; // 서버가 연결을 닫음
-                }
-                response[read_len] = '\0'; // NULL로 문자열 종료
-                printf("Server: %s\n", response);
-                if (strstr(response, "RECV\n") != NULL) { // "RECV\n" 수신 시 읽기 중단
-                    break;
-                }
+        // "\n" 기준으로 응답 분리
+        char* token = strtok(responseBuffer, "\n");
+        while(token != NULL) {
+            printf("Server: %s\n", token);
+            if (strcmp(token, "RECV") == 0) {
+                // "RECV\n"을 받았으므로 처리 중단
+                memset(responseBuffer, 0, BUF_SIZE); // 버퍼 초기화
+                break;
             }
-        } else {
-            enqueue(message);
+            token = strtok(NULL, "\n");
+        }
+        if (strcmp(token, "RECV") == 0) {
+            break; // "RECV\n" 수신 시 루프 종료
         }
     }
 

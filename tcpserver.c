@@ -89,7 +89,7 @@ int main() {
                             strcat(buf, "\n");
                             write(clnt_sock, buf, strlen(buf));
                         }
-                        write(clnt_sock, "SEND", strlen("SEND"));
+                        write(clnt_sock, "RECV", strlen("RECV"));
                         state = 0;
                     } else if (strcmp(ptr, "ECHO_CLOSE") == 0) {
                         write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
