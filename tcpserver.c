@@ -89,7 +89,7 @@ int main() {
                 puts(messageQueue[queueEnd - 1]);
                 puts("----");
                 // 마지막 메시지 확인
-                if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV\n") == 0) {
+                if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV\n") != NULL) {
                     
                     while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
                         write(clnt_sock, buf, strlen(buf));
