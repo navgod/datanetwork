@@ -96,7 +96,6 @@ int main() {
                         write(clnt_sock, "\n", 1); // 메시지 사이에 개행 추가
                         printf("buf = %s\n", buf);
                     }
-                    write(clnt_sock, "RECV\n", strlen("RECV\n")); // 모든 메시지 전송 후 RECV 응답
                     queueStart = 0; queueEnd = 0; // 큐 초기화
                 }
             }
