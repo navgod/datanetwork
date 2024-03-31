@@ -88,7 +88,7 @@ int main() {
                     while (dequeue(buf)) { // 큐에 있는 메시지를 모두 전송
                         write(clnt_sock, buf, strlen(buf));
                     }
-                    write(clnt_sock,"RECV\n", strlen("RECV\n"));
+                    write(clnt_sock, "RECV\n", strlen("RECV\n"));
                     state = 0; // 일반 모드로 전환
                 } else if (strcmp(buf, "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n")); // 클라이언트에게 종료 응답
