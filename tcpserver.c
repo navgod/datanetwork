@@ -66,11 +66,14 @@ int main() {
             continue; 
         } else if (pid == 0) {
             close(serv_sock);
+            write(clnt_sock, "서버 준비됨\n", strlen("서버 준비됨\n")); // 클라이언트에게 서버 준비 상태 알림
 
             char buf[MAXBUF];
-            int state = 0; // 0: 일반, 1: 메시지 수신 중
+            int str_len = 0; 
+            int state = 0; 
 
-            while (read(clnt_sock, buf, MAXBUF) != -1) {
+            while ((str_len = read(clnt_sock, buf, MAXBUF-1)) != -1) {
+                buf[str_len] = 0;
                 if (state == 0 && strcmp(buf, "SEND\n") == 0) {
                     state = 1; // "SEND\n" 메시지 수신, 수신 모드로 전환
                     continue;
