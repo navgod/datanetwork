@@ -86,7 +86,8 @@ int main() {
                 if (read_len <= 0) break;
                 tempBuffer[read_len] = '\0';
                 strcat(responseBuffer, tempBuffer); // Append received message to the response buffer
-
+                puts(responseBuffer);
+                
                 if (strstr(responseBuffer, "RECV\n") != NULL) {
                     printf("%s", responseBuffer); // Print all received echo messages
                     memset(responseBuffer, 0, sizeof(responseBuffer)); // Clear buffer after printing

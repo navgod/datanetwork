@@ -74,10 +74,11 @@ int main() {
                 ssize_t str_len = read(clnt_sock, buf, MAXBUF-1); // 메시지 읽기
                 if (str_len <= 0) break; // 연결 종료 또는 오류
                 buf[str_len] = '\0';
+                puts(buf);
                 
                 if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
-                    break; 
+                    break; // 연결 종료
                 }
 
                 enqueue(buf); // 메시지를 큐에 추가
