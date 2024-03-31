@@ -74,7 +74,6 @@ int main() {
             while (dequeue(message)) { // 큐가 비어있을 때까지 메시지 전송
                 write(sock, message, strlen(message));
                 write(sock, "\n", 1); // 메시지 사이에 개행 추가
-                printf("message = %s\n", message);
             }
             write(sock, "RECV\n", 5);
             queueStart = 0; queueEnd = 0; // Reset the queue
@@ -90,7 +89,6 @@ int main() {
 
                 while ((token = strtok_r(rest, "\n", &rest))) {
                     enqueue(token);
-                    printf("token = %s\n", token);
                 }
 
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV") != NULL) {
@@ -99,6 +97,7 @@ int main() {
                         printf("buf = %s\n", buf);
                     }
                     queueStart = 0; queueEnd = 0; // 큐 초기화
+                    break;
                 }
             }
         } else {
