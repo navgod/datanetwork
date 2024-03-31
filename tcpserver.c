@@ -80,6 +80,8 @@ int main() {
                 if (str_len == -1) break; // 읽기 오류 발생
                 buf[str_len] = 0; // NULL 문자 추가, 문자열 종료
 
+                 printf("Received from client: %s\n", buf);
+
                 if (!state && strcmp(buf, "SEND\n") == 0) {
                     state = 1; // 메시지 수신 모드로 전환
                 } else if (state && strcmp(buf, "RECV\n") == 0) {
