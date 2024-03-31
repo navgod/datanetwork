@@ -81,6 +81,7 @@ int main() {
                 char *ptr, *saveptr;
                 ptr = strtok_r(messageBuffer, "\n", &saveptr);
                 while (ptr) {
+                    printf(ptr)
                     if (!state && strcmp(ptr, "SEND") == 0) {
                         state = 1;
                     } else if (state && strcmp(ptr, "RECV") == 0) {
@@ -88,6 +89,7 @@ int main() {
                             strcat(buf, "\n");
                             write(clnt_sock, buf, strlen(buf));
                         }
+                        write(clnt_sock, "SEND", strlen("SEND"));
                         state = 0;
                     } else if (strcmp(ptr, "ECHO_CLOSE") == 0) {
                         write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
