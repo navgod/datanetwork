@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 
 #define MAXBUF 1024
+#define QUEUE_SIZE 10
 #define PORT 8081
 
 void error_handling(char *message) {
@@ -14,7 +15,7 @@ void error_handling(char *message) {
     exit(EXIT_FAILURE);
 }
 
-char messageQueue[10][MAXBUF]; // 10개 까지 수용
+char messageQueue[QUEUE_SIZE][MAXBUF]; // 10개 까지 수용
 int queueStart = 0, queueEnd = 0;
 
 void enqueue(char *message) {

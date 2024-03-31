@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 
 #define BUF_SIZE 1024
+#define QUEUE_SIZE 10
 #define PORT 8081
 
 void error_handling(char *message) {
@@ -13,42 +14,63 @@ void error_handling(char *message) {
     exit(EXIT_FAILURE);
 }
 
+char messageQueue[QUEUE_SIZE][BUF_SIZE]; 
+int queueStart = 0, queueEnd = 0;
+
+void enqueue(char *message) {
+    if ((queueEnd + 1) % QUEUE_SIZE != queueStart) {
+        strcpy(messageQueue[queueEnd], message);
+        queueEnd = (queueEnd + 1) % QUEUE_SIZE;
+    } else {
+        printf("Queue is full. Cannot enqueue message.\n");
+    }
+}
+
+int dequeue(char *message) {
+    if (queueStart != queueEnd) {
+        strcpy(message, messageQueue[queueStart]);
+        queueStart = (queueStart + 1) % QUEUE_SIZE;
+        return 1; // 성공적으로 메시지를 Dequeue
+    }
+    return 0; // 큐가 비어있음
+}
+
 int main() {
     int sock;
     struct sockaddr_in serv_addr;
-    char message[BUF_SIZE];
-    int str_len;
-
+    
     sock = socket(PF_INET, SOCK_STREAM, 0);
-    if (sock == -1) {
-        error_handling("socket() error");
-    }
+    if (sock == -1) error_handling("socket() error");
 
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // 서버의 IP 주소 설정
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     serv_addr.sin_port = htons(PORT);
 
-    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1) {
-        error_handling("connect error!");
-    } else {
-        puts("Connected to the server");
-    }
+    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
+        error_handling("connect() error!");
+    else
+        puts("Connected to the server...");
 
     while(1) {
-        fputs("Input message(Q to quit): ", stdout);
+        char message[BUF_SIZE];
+        fputs("Input message (Q to send, bye to quit): ", stdout);
         fgets(message, BUF_SIZE, stdin);
 
-        if (!strcmp(message, "Q\n") || !strcmp(message, "q\n")) {
-            break;
-        }
-
-        write(sock, message, strlen(message)); // 서버로 메시지 전송
-
-        if (!strcmp(message, "ECHO_CLOSE\n")) {
-            read(sock, message, BUF_SIZE); // 서버로부터의 응답 수신
-            printf("Message from server: %s\n", message);
-            break; // 서버로부터 "ECHO_CLOSE" 응답을 받으면 종료
+        if (!strcmp(message, "bye\n")) {
+            write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
+            int str_len = read(sock, message, BUF_SIZE - 1); 
+            message[str_len] = 0; 
+            printf("%s\n", message);
+            break; // 서버 응답 후 종료
+        } else if (!strcmp(message, "Q\n")) {
+            write(sock, "SEND\n", strlen("SEND\n"));
+            while (dequeue(message)) {
+                write(sock, message, strlen(message));
+            }
+            write(sock, "RECV\n", strlen("RECV\n"));
+        } else {
+            enqueue(message);
         }
     }
 
