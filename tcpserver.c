@@ -85,12 +85,10 @@ int main() {
                 puts(messageQueue[queueEnd - 1]);
                 // 마지막 메시지 확인
                 if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV\n") == 0) {
-                    puts("in");
-                    for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
-                        write(clnt_sock, messageQueue[i], strlen(messageQueue[i]));
-                        if (i < QUEUE_SIZE - 1) { // 마지막 메시지가 아니면
-                            write(clnt_sock, "\n", 1);
-                        }
+                    
+                    while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
+                        write(clnt_sock, buf, strlen(buf));
+                        write(clnt_sock, "\n", 1); // 메시지 사이에 개행 추가
                     }
                     write(clnt_sock, "RECV\n", strlen("RECV\n")); // 모든 메시지 전송 후 RECV 응답
                     queueStart = 0; queueEnd = 0; // 큐 초기화
