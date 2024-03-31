@@ -54,22 +54,34 @@ int main() {
 
     while(1) {
         char message[BUF_SIZE];
-        memset(message, 0, BUF_SIZE);
+        memset(message, 0, BUF_SIZE); // 메시지 버퍼 초기화
         fputs("Input message (Q to send, bye to quit): ", stdout);
         fgets(message, BUF_SIZE, stdin);
 
         if (!strcmp(message, "bye\n")) {
             write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
-            if (read(sock, message, BUF_SIZE) != -1) {
-                printf("Server: %s\n", message);
-            }
             break; // 서버 응답 후 종료
         } else if (!strcmp(message, "Q\n")) {
             write(sock, "SEND\n", strlen("SEND\n"));
-            while (!dequeue(message)) {
+            while (dequeue(message)) {
                 write(sock, message, strlen(message));
             }
             write(sock, "RECV\n", strlen("RECV\n"));
+            // 서버로부터 응답 받기 시작
+            while(1) {
+                char response[BUF_SIZE];
+                int read_len = read(sock, response, BUF_SIZE-1);
+                if (read_len == -1) {
+                    error_handling("read() error!");
+                } else if (read_len == 0) {
+                    break; // 서버가 연결을 닫음
+                }
+                response[read_len] = '\0'; // NULL로 문자열 종료
+                printf("Server: %s\n", response);
+                if (strstr(response, "RECV\n") != NULL) { // "RECV\n" 수신 시 읽기 중단
+                    break;
+                }
+            }
         } else {
             enqueue(message);
         }
