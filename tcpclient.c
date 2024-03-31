@@ -71,27 +71,34 @@ int main() {
             }
             break;
         } else if (strcmp(message, "Q\n") == 0) {
-            for (int i = queueStart; i != queueEnd; i = (i + 1) % QUEUE_SIZE) {
-                write(sock, messageQueue[i], strlen(messageQueue[i]));
-                write(sock, "\n", 1);
+            while (dequeue(message)) { // 큐가 비어있을 때까지 메시지 전송
+                write(clnt_sock, message, strlen(message));
+                write(clnt_sock, "\n", 1); // 메시지 사이에 개행 추가
+                printf("buf = %s\n", buf);
             }
             write(sock, "RECV\n", 5);
             queueStart = 0; queueEnd = 0; // Reset the queue
 
-            // Read server's echo messages until "RECV\n" is received
-            char responseBuffer[BUF_SIZE * QUEUE_SIZE] = {0}; // Larger buffer to hold all echoed messages
+            char buf[MAXBUF] = "";
             while(1) {
-                char tempBuffer[BUF_SIZE] = {0};
-                int read_len = read(sock, tempBuffer, BUF_SIZE - 1);
-                if (read_len <= 0) break;
-                tempBuffer[read_len] = '\0';
-                strcat(responseBuffer, tempBuffer); // Append received message to the response buffer
-                puts(responseBuffer);
+                memset(buf, 0, MAXBUF); // 버퍼 초기화
+                ssize_t str_len = read(sock, buf, MAXBUF-1); // 메시지 읽기
+                if (str_len <= 0) break; // 연결 종료 또는 오류
+                buf[str_len] = '\0';
+                char *token;
+                char *rest = buf;
 
-                if (strstr(responseBuffer, "RECV\n") != NULL) {
-                    printf("%s", responseBuffer); // Print all received echo messages
-                    memset(responseBuffer, 0, sizeof(responseBuffer)); // Clear buffer after printing
-                    break; // Exit after receiving "RECV\n"
+                while ((token = strtok_r(rest, "\n", &rest))) {
+                    enqueue(token);
+                    printf("token = %s\n", token);
+                }
+
+                if (queueEnd > 0 && strstr(messageQueue[queueEnd - 1], "RECV") != NULL) {
+                    
+                    while (dequeue(buf)) { // 큐가 비어있을 때까지 메시지 전송
+                        printf("buf = %s\n", buf);
+                    }
+                    queueStart = 0; queueEnd = 0; // 큐 초기화
                 }
             }
         } else {
