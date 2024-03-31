@@ -64,7 +64,7 @@ int main() {
                 int read_len = read(sock, message, BUF_SIZE - 1);
                 if (read_len <= 0) break;
                 message[read_len] = '\0';
-                if (strstr(message, "ECHO_CLOSE\n") == 0) {
+                if (strstr(message, "ECHO_CLOSE\n") != NULL) {
                     printf("Server closed connection.\n");
                     break;
                 }

@@ -81,7 +81,7 @@ int main() {
                     enqueue(token);
                     printf("client = %s\n", token);
                 }
-                if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") == 0) {
+                if (queueEnd > 0 && strcmp(messageQueue[queueEnd - 1], "ECHO_CLOSE\n") != NULL) {
                     write(clnt_sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
                     puts("Connection closed");
                     break; // 연결 종료
