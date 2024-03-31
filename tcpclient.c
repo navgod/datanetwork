@@ -60,6 +60,18 @@ int main() {
 
         if (!strcmp(message, "bye\n")) {
             write(sock, "ECHO_CLOSE\n", strlen("ECHO_CLOSE\n"));
+            memset(message, 0, BUF_SIZE);
+            int read_len = read(sock, message, BUF_SIZE-1);
+            if (read_len == -1) {
+                    error_handling("read() error!");
+            } else if (read_len == 0) {
+                    break;
+            }
+            message[read_len] = '\0';
+            strcat(responseBuffer, message);
+            if (strstr(responseBuffer, "ECHO_CLOSE\n") != NULL) {
+                    break;
+                }
             break;
         } else if (!strcmp(message, "Q\n")) {
             write(sock, "SEND\n", strlen("SEND\n"));
