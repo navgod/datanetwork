@@ -66,7 +66,7 @@ int main() {
             break; // 서버 응답 후 종료
         } else if (!strcmp(message, "Q\n")) {
             write(sock, "SEND\n", strlen("SEND\n"));
-            while (dequeue(message)) {
+            while (!dequeue(message)) {
                 write(sock, message, strlen(message));
             }
             write(sock, "RECV\n", strlen("RECV\n"));

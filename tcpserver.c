@@ -75,9 +75,9 @@ int main() {
 
             while (1) {
                 memset(buf, 0, MAXBUF); // 버퍼 초기화
-                int str_len = read(clnt_sock, buf, MAXBUF-1);
                 if (str_len == -1) break; // 읽기 오류 발생
                 buf[str_len] = 0; // NULL 문자 추가
+                int str_len = read(clnt_sock, buf, MAXBUF-1);
 
                 if (!state && strcmp(buf, "SEND\n") == 0) {
                     state = 1; // 메시지 수신 모드로 전환
